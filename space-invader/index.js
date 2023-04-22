@@ -77,7 +77,45 @@ class Projectile {
     }
 }
 
+class Invader {
+    constructor() {
+        const img = new Image();
+        img.src = './assets/invader.png'
+        this.scale = 1
+        
+        this.velocity = {
+            x: 0,
+            y: 0
+        }
+
+        // When img is loaded, setup for player will be activated in callback function
+        img.onload = () => {
+            this.image = img
+            this.width = img.width * this.scale
+            this.height = img.height * this.scale
+
+            this.position = {
+                x: (canvas.width / 2) - (this.width / 2),
+                y: canvas.height / 2
+            }
+        }
+    }
+
+    draw() {
+        c.drawImage(this.image, this.position.x, this.position.y, this.width, this.height);
+    }
+
+    update() {
+        if (this.image) {
+            this.draw();
+            this.position.x += this.velocity.x
+            this.position.y += this.velocity.y
+        }
+    }
+}
+
 const player = new Player();
+const invader = new Invader();
 const control = {
     left: {
         value: 'a',
@@ -99,6 +137,8 @@ function animate() {
     requestAnimationFrame(animate)
     c.fillStyle = 'black';
     c.fillRect(0, 0, canvas.width, canvas.height)
+    
+    invader.update();
     player.update()
 
     ammos.forEach((ammo, index) => {
