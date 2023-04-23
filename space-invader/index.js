@@ -78,7 +78,7 @@ class Projectile {
 }
 
 class Invader {
-    constructor() {
+    constructor({ position }) {
         const img = new Image();
         img.src = './assets/invader.png'
         this.scale = 1
@@ -95,8 +95,8 @@ class Invader {
             this.height = img.height * this.scale
 
             this.position = {
-                x: (canvas.width / 2) - (this.width / 2),
-                y: canvas.height / 2
+                x: position.x,
+                y: position.y
             }
         }
     }
@@ -105,17 +105,77 @@ class Invader {
         c.drawImage(this.image, this.position.x, this.position.y, this.width, this.height);
     }
 
-    update() {
+    update({ velocity }) {
         if (this.image) {
             this.draw();
-            this.position.x += this.velocity.x
-            this.position.y += this.velocity.y
+            // this.position.y += velocity.y
+            
+            if (this.position.x + this.width >= 200) {
+                // this.position.x -= velocity.x
+                // console.log(this.position, this.width);
+            } else {
+                // this.position.x += velocity.x
+                // console.log(this.position, this.width);
+            }
         }
     }
 }
 
+class Grid {
+    constructor({ totalInvaders, numberOfInvaderPerLine, lineOfEnemies }) {
+        this.position = {
+            x: 0,
+            y: 0
+        }
+
+        this.velocity = {
+            x: 0,
+            y: 0
+        }
+
+        this.invaders = Array(totalInvaders);
+
+        this.width = numberOfInvaderPerLine * 50
+
+        let maxInvaderPerLine = 0;
+        let index = 0
+        let yAxis = 0
+
+        while(index < this.invaders.length && yAxis < lineOfEnemies) {
+            this.invaders[index] = new Invader({
+                position: {
+                    x: maxInvaderPerLine * 50,
+                    y: yAxis * 50
+                }
+            })
+            index++;
+            maxInvaderPerLine++
+            if (maxInvaderPerLine > numberOfInvaderPerLine) {
+                maxInvaderPerLine = 0
+                yAxis++
+            }
+        }
+    }
+
+    update({ velocity }) {
+        this.position.x += velocity.x
+        this.position.y += velocity.y
+        
+        const state = ((this.position.x + this.width) > canvas.width - 50)
+        
+        if (state) {
+            this.velocity.x = -velocity.x
+        } else {
+            this.velocity.x = velocity.x
+        }
+
+        
+        this.invaders.forEach(invader => invader.update({ velocity: this.velocity }));
+    }
+}
+
 const player = new Player();
-const invader = new Invader();
+const invader = new Invader({ position: { x: 0, y: 0 }})
 const control = {
     left: {
         value: 'a',
@@ -132,13 +192,15 @@ const control = {
 }
 const ammos = [
 ]
+const grids = [
+    new Grid({ totalInvaders: 200, numberOfInvaderPerLine: 19, lineOfEnemies: 5 })
+]
 
 function animate() {
     requestAnimationFrame(animate)
     c.fillStyle = 'black';
     c.fillRect(0, 0, canvas.width, canvas.height)
     
-    invader.update();
     player.update()
 
     ammos.forEach((ammo, index) => {
@@ -148,6 +210,12 @@ function animate() {
             ammo.update()
         }
     })
+
+    // grids.forEach(grid => {
+    //     grid.update({ velocity: { x: 1, y: 0 }})
+    // })
+
+    invader.update({ velocity: { x: .5, y: 0 }})
 
     if (control.left.pressed && player.position.x >= 0) {
         player.velocity.x = -5
